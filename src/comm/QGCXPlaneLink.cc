@@ -529,10 +529,10 @@ void QGCXPlaneLink::updateActuatorControls(quint64 time, quint64 flags, float ct
 
             /* Control individual actuators */
             float max_surface_deflection = 30.0f; // Degrees
-            sendDataRef("sim/flightmodel/controls/wing1l_ail1def", ctl_8 * max_surface_deflection);
-            sendDataRef("sim/flightmodel/controls/wing1r_ail1def", ctl_9 * max_surface_deflection);
-            sendDataRef("sim/flightmodel/controls/wing2l_ail1def", ctl_10 * max_surface_deflection);
-            sendDataRef("sim/flightmodel/controls/wing2r_ail1def", ctl_11 * max_surface_deflection);
+            sendDataRef("sim/flightmodel/controls/mwing13_ail1def", ctl_8 * max_surface_deflection);
+            sendDataRef("sim/flightmodel/controls/mwing14_ail1def", ctl_9 * max_surface_deflection);
+            sendDataRef("sim/flightmodel/controls/mwing15_ail1def", ctl_10 * max_surface_deflection);
+            sendDataRef("sim/flightmodel/controls/mwing16_ail1def", ctl_11 * max_surface_deflection);
 
             break;
         }
