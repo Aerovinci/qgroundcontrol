@@ -665,6 +665,10 @@ void QGCXPlaneLink::readBytes()
 					yacc = p.f[6] * one_g;
 					zacc = -p.f[4] * one_g;
 
+                    // FOR TAILSITTER
+                    //xacc = -p.f[4] * one_g;
+                    //zacc = -p.f[5] * one_g;
+
 					//qDebug() << "X-Plane values" << xacc << yacc << zacc;
 				}
 
@@ -696,12 +700,18 @@ void QGCXPlaneLink::readBytes()
                 pitchspeed = p.f[0];
                 rollspeed = p.f[1];
                 yawspeed = p.f[2];
+
+                // FOR TAILSITTER
+                //rollspeed = p.f[2];
+                //yawspeed = -p.f[1];
+
                 fields_changed |= (1 << 3) | (1 << 4) | (1 << 5);
 
                 emitUpdate = true;
             }
             else if ((xPlaneVersion == 10 && p.index == 17) || (xPlaneVersion == 9 && p.index == 18))
             {
+#if 0
                 //qDebug() << "HDNG" << "pitch" << p.f[0] << "roll" << p.f[1] << "hding true" << p.f[2] << "hding mag" << p.f[3];
                 pitch = p.f[0] / 180.0f * M_PI;
                 roll = p.f[1] / 180.0f * M_PI;
@@ -766,11 +776,13 @@ void QGCXPlaneLink::readBytes()
                 xmag = magbody(0);
                 ymag = magbody(1);
                 zmag = magbody(2);
+                qDebug() << "OLD: " << magbody(0) << " " << magbody(1) << " " << magbody(2);
 
                 // Rotate the measurement vector into the body frame using roll and pitch
 
 
                 emitUpdate = true;
+#endif
             }
 
 //            else if (p.index == 19)
@@ -814,6 +826,58 @@ void QGCXPlaneLink::readBytes()
                 //qDebug() << "UNKNOWN #" << p.index << p.f[0] << p.f[1] << p.f[2] << p.f[3];
             }
         }
+    }
+    else if (data[0] == 'D' &&
+             data[1] == 'R' &&
+             data[2] == 'E' &&
+             data[3] == 'F')
+    {
+        /*
+        static qint64 time = QGC::groundTimeMilliseconds();
+        qint64 newtime = QGC::groundTimeMilliseconds();
+        qint64 diff = newtime - time;
+        time = newtime;
+        qDebug() << diff;
+        */
+        /* In here, extract quaternion, magnetic variation and xyz accelerations from xplane dataref */
+        data[s-1] = '\0'; // leave out last comma
+        QString test = QString(&data[6]);
+        //qDebug() << test;
+        QStringList list = test.split(",");
+        //qDebug() << list;
+        if (list.length() == 5) {
+            /* Probably a quaternion and magvar because we have 5 datarefs */
+            float quaternion[4];
+            quaternion[0] = list.at(0).toFloat();
+            quaternion[1] = list.at(1).toFloat();
+            quaternion[2] = list.at(2).toFloat();
+            quaternion[3] = list.at(3).toFloat();
+
+            float magvar = list.at(4).toFloat() * static_cast<float>(M_PI) / 180.0f;
+
+            qDebug() << list << " mag: " << magvar;
+
+            /* Set roll/pitch/yaw for use without hil raw imu */
+            mavlink_quaternion_to_euler(quaternion, &roll, &pitch, &yaw);
+
+            /* Magnetic field in body frame is calculated from quaternion and magnetic variation */
+            float dcm[3][3];
+            mavlink_quaternion_to_dcm(quaternion, dcm);
+            Eigen::Matrix3f m = Eigen::Map<Eigen::Matrix3f>((float*)dcm).eval();
+
+            /* Now we construct the magnetic field vector */
+            Eigen::Vector3f mag_ned(cosf(-magvar) * 0.25f, sinf(-magvar) * 0.25f, 0.45f); // these raw values are 'inspired' by original implementation
+
+            Eigen::Vector3f magbody = m * mag_ned; // this was verified against the old method
+            //qDebug() << "NEW: " << magbody.x() << " " << magbody.y() << " " << magbody.z();
+            xmag = magbody(0);
+            ymag = magbody(1);
+            zmag = magbody(2);
+
+            emitUpdate = true;
+        }
+
+
     }
     else if (data[0] == 'S' &&
              data[1] == 'N' &&
@@ -883,8 +947,15 @@ void QGCXPlaneLink::readBytes()
             // set pressure alt to changed
             fields_changed |= (1 << 11);
 
-            emit sensorHilRawImuChanged(QGC::groundTimeUsecs(), xacc, yacc, zacc, rollspeed, pitchspeed, yawspeed,
-                                        xmag, ymag, zmag, abs_pressure, diff_pressure / 100.0, pressure_alt, temperature, fields_changed);
+            if (/* TAILSITTER */ true)
+            {
+                emit sensorHilRawImuChanged(QGC::groundTimeUsecs(), zacc, yacc, -xacc, yawspeed, pitchspeed, -rollspeed,
+                                            zmag, ymag, -xmag, abs_pressure, diff_pressure / 100.0, pressure_alt, temperature, fields_changed);
+            }
+            else {
+                emit sensorHilRawImuChanged(QGC::groundTimeUsecs(), xacc, yacc, zacc, rollspeed, pitchspeed, yawspeed,
+                                            xmag, ymag, zmag, abs_pressure, diff_pressure / 100.0, pressure_alt, temperature, fields_changed);
+            }
 
             // XXX make these GUI-configurable and add randomness
             int gps_fix_type = 3;
