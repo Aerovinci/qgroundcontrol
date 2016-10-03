@@ -34,7 +34,8 @@ class AutoPilotPlugin;
 class AutoPilotPluginManager;
 class MissionManager;
 class GeoFenceManager;
-class ParameterLoader;
+class RallyPointManager;
+class ParameterManager;
 class JoystickManager;
 class UASMessage;
 
@@ -216,9 +217,11 @@ public:
             AutoPilotPluginManager* autopilotPluginManager,
             JoystickManager*        joystickManager);
 
-    // The following is used to create a disconnected Vehicle. Disconnected vehicles are used used to access FactGroup information
-    // without needing a real connection as well as offline mission planning.
-    Vehicle(MAV_AUTOPILOT firmwareType, MAV_TYPE vehicleType, QObject* parent = NULL);
+    // The following is used to create a disconnected Vehicle for use while offline editing.
+    Vehicle(MAV_AUTOPILOT           firmwareType,
+            MAV_TYPE                vehicleType,
+            FirmwarePluginManager*  firmwarePluginManager,
+            QObject*                parent = NULL);
 
     ~Vehicle();
 
@@ -233,7 +236,6 @@ public:
     Q_PROPERTY(QStringList          flightModes             READ flightModes                                            CONSTANT)
     Q_PROPERTY(QString              flightMode              READ flightMode             WRITE setFlightMode             NOTIFY flightModeChanged)
     Q_PROPERTY(bool                 hilMode                 READ hilMode                WRITE setHilMode                NOTIFY hilModeChanged)
-    Q_PROPERTY(bool                 missingParameters       READ missingParameters                                      NOTIFY missingParametersChanged)
     Q_PROPERTY(QmlObjectListModel*  trajectoryPoints        READ trajectoryPoints                                       CONSTANT)
     Q_PROPERTY(float                latitude                READ latitude                                               NOTIFY coordinateChanged)
     Q_PROPERTY(float                longitude               READ longitude                                              NOTIFY coordinateChanged)
@@ -276,6 +278,7 @@ public:
     Q_PROPERTY(int                  motorCount              READ motorCount                                             CONSTANT)
     Q_PROPERTY(bool                 coaxialMotors           READ coaxialMotors                                          CONSTANT)
     Q_PROPERTY(bool                 xConfigMotors           READ xConfigMotors                                          CONSTANT)
+    Q_PROPERTY(bool                 isOfflineEditingVehicle READ isOfflineEditingVehicle                                CONSTANT)
 
     /// true: Vehicle is flying, false: Vehicle is on ground
     Q_PROPERTY(bool flying      READ flying     WRITE setFlying     NOTIFY flyingChanged)
@@ -291,6 +294,8 @@ public:
 
     /// true: Orbit mode is supported by this vehicle
     Q_PROPERTY(bool orbitModeSupported READ orbitModeSupported CONSTANT)
+
+    Q_PROPERTY(ParameterManager* parameterManager READ parameterManager CONSTANT)
 
     // FactGroup object model properties
 
@@ -425,10 +430,6 @@ public:
     /// @return true: message sent, false: Link no longer connected
     bool sendMessageOnLink(LinkInterface* link, mavlink_message_t message);
 
-    /// Sends a message to the priority link
-    /// @return true: message sent, false: Link no longer connected
-    bool sendMessageOnPriorityLink(mavlink_message_t message) { return sendMessageOnLink(priorityLink(), message); }
-
     /// Sends the specified messages multiple times to the vehicle in order to attempt to
     /// guarantee that it makes it to the vehicle.
     void sendMessageMultiple(mavlink_message_t message);
@@ -444,8 +445,9 @@ public:
 
     int manualControlReservedButtonCount(void);
 
-    MissionManager* missionManager(void) { return _missionManager; }
-    GeoFenceManager* geoFenceManager(void) { return _geoFenceManager; }
+    MissionManager*     missionManager(void)    { return _missionManager; }
+    GeoFenceManager*    geoFenceManager(void)   { return _geoFenceManager; }
+    RallyPointManager*  rallyPointManager(void) { return _rallyPointManager; }
 
     bool homePositionAvailable(void);
     QGeoCoordinate homePosition(void);
@@ -488,8 +490,6 @@ public:
     ///     @param sendMultiple Send multiple time to guarantee Vehicle reception
     void requestDataStream(MAV_DATA_STREAM stream, uint16_t rate, bool sendMultiple = true);
 
-    bool missingParameters(void);
-
     typedef enum {
         MessageNone,
         MessageNormal,
@@ -497,32 +497,33 @@ public:
         MessageError
     } MessageType_t;
 
-    bool            messageTypeNone     () { return _currentMessageType == MessageNone; }
-    bool            messageTypeNormal   () { return _currentMessageType == MessageNormal; }
-    bool            messageTypeWarning  () { return _currentMessageType == MessageWarning; }
-    bool            messageTypeError    () { return _currentMessageType == MessageError; }
-    int             newMessageCount     () { return _currentMessageCount; }
-    int             messageCount        () { return _messageCount; }
-    QString         formatedMessages    ();
-    QString         formatedMessage     () { return _formatedMessage; }
-    QString         latestError         () { return _latestError; }
-    float           latitude            () { return _coordinate.latitude(); }
-    float           longitude           () { return _coordinate.longitude(); }
-    bool            mavPresent          () { return _mav != NULL; }
-    QString         currentState        () { return _currentState; }
-    int             rcRSSI              () { return _rcRSSI; }
-    bool            px4Firmware         () const { return _firmwareType == MAV_AUTOPILOT_PX4; }
-    bool            apmFirmware         () const { return _firmwareType == MAV_AUTOPILOT_ARDUPILOTMEGA; }
-    bool            genericFirmware     () const { return !px4Firmware() && !apmFirmware(); }
-    bool            connectionLost      () const { return _connectionLost; }
-    bool            connectionLostEnabled() const { return _connectionLostEnabled; }
-    uint            messagesReceived    () { return _messagesReceived; }
-    uint            messagesSent        () { return _messagesSent; }
-    uint            messagesLost        () { return _messagesLost; }
-    bool            flying              () const { return _flying; }
-    bool            guidedMode          () const;
-    uint8_t         baseMode            () const { return _base_mode; }
-    uint32_t        customMode          () const { return _custom_mode; }
+    bool            messageTypeNone         () { return _currentMessageType == MessageNone; }
+    bool            messageTypeNormal       () { return _currentMessageType == MessageNormal; }
+    bool            messageTypeWarning      () { return _currentMessageType == MessageWarning; }
+    bool            messageTypeError        () { return _currentMessageType == MessageError; }
+    int             newMessageCount         () { return _currentMessageCount; }
+    int             messageCount            () { return _messageCount; }
+    QString         formatedMessages        ();
+    QString         formatedMessage         () { return _formatedMessage; }
+    QString         latestError             () { return _latestError; }
+    float           latitude                () { return _coordinate.latitude(); }
+    float           longitude               () { return _coordinate.longitude(); }
+    bool            mavPresent              () { return _mav != NULL; }
+    QString         currentState            () { return _currentState; }
+    int             rcRSSI                  () { return _rcRSSI; }
+    bool            px4Firmware             () const { return _firmwareType == MAV_AUTOPILOT_PX4; }
+    bool            apmFirmware             () const { return _firmwareType == MAV_AUTOPILOT_ARDUPILOTMEGA; }
+    bool            genericFirmware         () const { return !px4Firmware() && !apmFirmware(); }
+    bool            connectionLost          () const { return _connectionLost; }
+    bool            connectionLostEnabled   () const { return _connectionLostEnabled; }
+    uint            messagesReceived        () { return _messagesReceived; }
+    uint            messagesSent            () { return _messagesSent; }
+    uint            messagesLost            () { return _messagesLost; }
+    bool            flying                  () const { return _flying; }
+    bool            guidedMode              () const;
+    uint8_t         baseMode                () const { return _base_mode; }
+    uint32_t        customMode              () const { return _custom_mode; }
+    bool            isOfflineEditingVehicle () const { return _offlineEditingVehicle; }
 
     Fact* roll              (void) { return &_rollFact; }
     Fact* heading           (void) { return &_headingFact; }
@@ -540,7 +541,8 @@ public:
 
     void setConnectionLostEnabled(bool connectionLostEnabled);
 
-    ParameterLoader* getParameterLoader(void);
+    ParameterManager* parameterManager(void) { return _parameterManager; }
+    ParameterManager* parameterManager(void) const { return _parameterManager; }
 
     static const int cMaxRcChannels = 18;
 
@@ -569,14 +571,6 @@ public:
     /// @return true: X confiuration, false: Plus configuration
     bool xConfigMotors(void);
 
-    /// Returns true if the specifed parameter exists from the default component
-    bool parameterExists(int componentId, const QString& name) const;
-
-    /// Returns the specified parameter Fact from the default component
-    /// WARNING: Returns a default Fact if parameter does not exists. If that possibility exists, check for existence first with
-    /// parameterExists.
-    Fact* getParameterFact(int componentId, const QString& name);
-
 public slots:
     void setLatitude(double latitude);
     void setLongitude(double longitude);
@@ -594,7 +588,8 @@ signals:
     void armedChanged(bool armed);
     void flightModeChanged(const QString& flightMode);
     void hilModeChanged(bool hilMode);
-    void missingParametersChanged(bool missingParameters);
+    /** @brief HIL actuator controls (replaces HIL controls) */
+    void hilActuatorControlsChanged(quint64 time, quint64 flags, float ctl_0, float ctl_1, float ctl_2, float ctl_3, float ctl_4, float ctl_5, float ctl_6, float ctl_7, float ctl_8, float ctl_9, float ctl_10, float ctl_11, float ctl_12, float ctl_13, float ctl_14, float ctl_15, quint8 mode);
     void connectionLostChanged(bool connectionLost);
     void connectionLostEnabledChanged(bool connectionLostEnabled);
     void autoDisconnectChanged(bool autoDisconnectChanged);
@@ -669,6 +664,7 @@ private slots:
     void _connectionLostTimeout(void);
     void _prearmErrorTimeout(void);
     void _newMissionItemsAvailable(void);
+    void _newGeoFenceAvailable(void);
 
 private:
     bool _containsLink(LinkInterface* link);
@@ -688,8 +684,10 @@ private:
     void _handleExtendedSysState(mavlink_message_t& message);
     void _handleCommandAck(mavlink_message_t& message);
     void _handleAutopilotVersion(mavlink_message_t& message);
+    void _handleHilActuatorControls(mavlink_message_t& message);
     void _missionManagerError(int errorCode, const QString& errorMsg);
     void _geoFenceManagerError(int errorCode, const QString& errorMsg);
+    void _rallyPointManagerError(int errorCode, const QString& errorMsg);
     void _mapTrajectoryStart(void);
     void _mapTrajectoryStop(void);
     void _connectionActive(void);
@@ -697,9 +695,9 @@ private:
     QString _vehicleIdSpeech(void);
 
 private:
-    int     _id;            ///< Mavlink system id
+    int     _id;                    ///< Mavlink system id
     bool    _active;
-    bool    _disconnectedVehicle;   ///< This Vehicle is a "disconnected" vehicle for ui use when no active vehicle is available
+    bool    _offlineEditingVehicle; ///< This Vehicle is a "disconnected" vehicle for ui use while offline editing
 
     MAV_AUTOPILOT       _firmwareType;
     MAV_TYPE            _vehicleType;
@@ -753,12 +751,15 @@ private:
     QTimer              _connectionLostTimer;
 
     MissionManager*     _missionManager;
-    bool                _missionManagerInitialRequestComplete;
+    bool                _missionManagerInitialRequestSent;
 
     GeoFenceManager*    _geoFenceManager;
-    bool                _geoFenceManagerInitialRequestComplete;
+    bool                _geoFenceManagerInitialRequestSent;
 
-    ParameterLoader*    _parameterLoader;
+    RallyPointManager*  _rallyPointManager;
+    bool                _rallyPointManagerInitialRequestSent;
+
+    ParameterManager*    _parameterManager;
 
     bool    _armed;         ///< true: vehicle is armed
     uint8_t _base_mode;     ///< base_mode from HEARTBEAT

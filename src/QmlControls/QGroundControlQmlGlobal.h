@@ -87,7 +87,6 @@ public:
     Q_PROPERTY(qreal    baseFontPointSize       READ baseFontPointSize          WRITE setBaseFontPointSize          NOTIFY baseFontPointSizeChanged)
 
     // MavLink Protocol
-    Q_PROPERTY(bool     isMultiplexingEnabled   READ isMultiplexingEnabled      WRITE setIsMultiplexingEnabled      NOTIFY isMultiplexingEnabledChanged)
     Q_PROPERTY(bool     isVersionCheckEnabled   READ isVersionCheckEnabled      WRITE setIsVersionCheckEnabled      NOTIFY isVersionCheckEnabledChanged)
     Q_PROPERTY(int      mavlinkSystemID         READ mavlinkSystemID            WRITE setMavlinkSystemID            NOTIFY mavlinkSystemIDChanged)
 
@@ -179,7 +178,6 @@ public:
     bool    virtualTabletJoystick   () { return _virtualTabletJoystick; }
     qreal   baseFontPointSize       () { return _baseFontPointSize; }
 
-    bool    isMultiplexingEnabled   () { return _toolbox->mavlinkProtocol()->multiplexingEnabled(); }
     bool    isVersionCheckEnabled   () { return _toolbox->mavlinkProtocol()->versionCheckEnabled(); }
     int     mavlinkSystemID         () { return _toolbox->mavlinkProtocol()->getSystemId(); }
 
@@ -204,7 +202,6 @@ public:
     void    setVirtualTabletJoystick    (bool enabled);
     void    setBaseFontPointSize        (qreal size);
 
-    void    setIsMultiplexingEnabled    (bool enable);
     void    setIsVersionCheckEnabled    (bool enable);
     void    setMavlinkSystemID          (int  id);
 
@@ -229,6 +226,9 @@ signals:
     void flightMapZoomChanged           (double flightMapZoom);
 
 private:
+    static SettingsFact* _createSettingsFact(const QString& name);
+    static QMap<QString, FactMetaData*>& nameToMetaDataMap(void);
+
     FlightMapSettings*      _flightMapSettings;
     HomePositionManager*    _homePositionManager;
     LinkManager*            _linkManager;
@@ -245,9 +245,7 @@ private:
 
     // These are static so they are available to C++ code as well as Qml
     static SettingsFact*    _offlineEditingFirmwareTypeFact;
-    static FactMetaData*    _offlineEditingFirmwareTypeMetaData;
     static SettingsFact*    _offlineEditingVehicleTypeFact;
-    static FactMetaData*    _offlineEditingVehicleTypeMetaData;
     static SettingsFact*    _offlineEditingCruiseSpeedFact;
     static SettingsFact*    _offlineEditingHoverSpeedFact;
     static SettingsFact*    _distanceUnitsFact;
@@ -257,7 +255,6 @@ private:
     static SettingsFact*    _speedUnitsFact;
     static FactMetaData*    _speedUnitsMetaData;
     static SettingsFact*    _batteryPercentRemainingAnnounceFact;
-    static FactMetaData*    _batteryPercentRemainingAnnounceMetaData;
 
     static const char*  _virtualTabletJoystickKey;
     static const char*  _baseFontPointSizeKey;

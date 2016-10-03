@@ -67,6 +67,8 @@ public:
 
     static const char* parameterFileExtension;
     static const char* missionFileExtension;
+    static const char* fenceFileExtension;
+    static const char* rallyPointFileExtension;
     static const char* telemetryFileExtension;
 
     /// @brief Sets the persistent flag to delete all settings the next time QGroundControl is started.

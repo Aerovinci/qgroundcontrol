@@ -53,6 +53,11 @@ contains (DEFINES, QGC_DISABLE_UVC) {
 } else:exists(user_config.pri):infile(user_config.pri, DEFINES, QGC_DISABLE_UVC) {
     message("Skipping support for UVC devices (manual override from user_config.pri)")
     DEFINES += QGC_DISABLE_UVC
+} else:LinuxBuild {
+    contains(QT_VERSION, 5.5.1) {
+        message("Skipping support for UVC devices (conflict with Qt 5.5.1 on Ubuntu)")
+        DEFINES += QGC_DISABLE_UVC
+    }
 }
 
 LinuxBuild {
@@ -288,7 +293,6 @@ HEADERS += \
     src/MissionManager/ComplexMissionItem.h \
     src/MissionManager/GeoFenceController.h \
     src/MissionManager/GeoFenceManager.h \
-    src/MissionManager/QGCMapPolygon.h \
     src/MissionManager/MissionCommandList.h \
     src/MissionManager/MissionCommandTree.h \
     src/MissionManager/MissionCommandUIInfo.h \
@@ -296,6 +300,10 @@ HEADERS += \
     src/MissionManager/MissionItem.h \
     src/MissionManager/MissionManager.h \
     src/MissionManager/PlanElementController.h \
+    src/MissionManager/QGCMapPolygon.h \
+    src/MissionManager/RallyPoint.h \
+    src/MissionManager/RallyPointController.h \
+    src/MissionManager/RallyPointManager.h \
     src/MissionManager/SimpleMissionItem.h \
     src/MissionManager/SurveyMissionItem.h \
     src/MissionManager/VisualMissionItem.h \
@@ -452,7 +460,6 @@ SOURCES += \
     src/MissionManager/ComplexMissionItem.cc \
     src/MissionManager/GeoFenceController.cc \
     src/MissionManager/GeoFenceManager.cc \
-    src/MissionManager/QGCMapPolygon.cc \
     src/MissionManager/MissionCommandList.cc \
     src/MissionManager/MissionCommandTree.cc \
     src/MissionManager/MissionCommandUIInfo.cc \
@@ -460,6 +467,10 @@ SOURCES += \
     src/MissionManager/MissionItem.cc \
     src/MissionManager/MissionManager.cc \
     src/MissionManager/PlanElementController.cc \
+    src/MissionManager/QGCMapPolygon.cc \
+    src/MissionManager/RallyPoint.cc \
+    src/MissionManager/RallyPointController.cc \
+    src/MissionManager/RallyPointManager.cc \
     src/MissionManager/SimpleMissionItem.cc \
     src/MissionManager/SurveyMissionItem.cc \
     src/MissionManager/VisualMissionItem.cc \
@@ -580,6 +591,7 @@ HEADERS += \
     src/FactSystem/FactSystemTestBase.h \
     src/FactSystem/FactSystemTestGeneric.h \
     src/FactSystem/FactSystemTestPX4.h \
+    src/FactSystem/ParameterManagerTest.h \
     src/MissionManager/ComplexMissionItemTest.h \
     src/MissionManager/MissionCommandTreeTest.h \
     src/MissionManager/MissionControllerTest.h \
@@ -596,7 +608,6 @@ HEADERS += \
     src/qgcunittest/MavlinkLogTest.h \
     src/qgcunittest/MessageBoxTest.h \
     src/qgcunittest/MultiSignalSpy.h \
-    src/qgcunittest/ParameterLoaderTest.h \
     src/qgcunittest/RadioConfigTest.h \
     src/qgcunittest/TCPLinkTest.h \
     src/qgcunittest/TCPLoopBackServer.h \
@@ -608,6 +619,7 @@ SOURCES += \
     src/FactSystem/FactSystemTestBase.cc \
     src/FactSystem/FactSystemTestGeneric.cc \
     src/FactSystem/FactSystemTestPX4.cc \
+    src/FactSystem/ParameterManagerTest.cc \
     src/MissionManager/ComplexMissionItemTest.cc \
     src/MissionManager/MissionCommandTreeTest.cc \
     src/MissionManager/MissionControllerTest.cc \
@@ -624,7 +636,6 @@ SOURCES += \
     src/qgcunittest/MavlinkLogTest.cc \
     src/qgcunittest/MessageBoxTest.cc \
     src/qgcunittest/MultiSignalSpy.cc \
-    src/qgcunittest/ParameterLoaderTest.cc \
     src/qgcunittest/RadioConfigTest.cc \
     src/qgcunittest/TCPLinkTest.cc \
     src/qgcunittest/TCPLoopBackServer.cc \
@@ -691,6 +702,7 @@ HEADERS+= \
     src/FirmwarePlugin/APM/APMFirmwarePlugin.h \
     src/FirmwarePlugin/APM/APMGeoFenceManager.h \
     src/FirmwarePlugin/APM/APMParameterMetaData.h \
+    src/FirmwarePlugin/APM/APMRallyPointManager.h \
     src/FirmwarePlugin/APM/ArduCopterFirmwarePlugin.h \
     src/FirmwarePlugin/APM/ArduPlaneFirmwarePlugin.h \
     src/FirmwarePlugin/APM/ArduRoverFirmwarePlugin.h \
@@ -752,6 +764,7 @@ SOURCES += \
     src/FirmwarePlugin/APM/APMFirmwarePlugin.cc \
     src/FirmwarePlugin/APM/APMGeoFenceManager.cc \
     src/FirmwarePlugin/APM/APMParameterMetaData.cc \
+    src/FirmwarePlugin/APM/APMRallyPointManager.cc \
     src/FirmwarePlugin/APM/ArduCopterFirmwarePlugin.cc \
     src/FirmwarePlugin/APM/ArduPlaneFirmwarePlugin.cc \
     src/FirmwarePlugin/APM/ArduRoverFirmwarePlugin.cc \
@@ -787,7 +800,7 @@ HEADERS += \
     src/FactSystem/FactMetaData.h \
     src/FactSystem/FactSystem.h \
     src/FactSystem/FactValidator.h \
-    src/FactSystem/ParameterLoader.h \
+    src/FactSystem/ParameterManager.h \
     src/FactSystem/SettingsFact.h \
 
 SOURCES += \
@@ -797,7 +810,7 @@ SOURCES += \
     src/FactSystem/FactMetaData.cc \
     src/FactSystem/FactSystem.cc \
     src/FactSystem/FactValidator.cc \
-    src/FactSystem/ParameterLoader.cc \
+    src/FactSystem/ParameterManager.cc \
     src/FactSystem/SettingsFact.cc \
 
 #-------------------------------------------------------------------------------------
