@@ -500,7 +500,6 @@ void QGCXPlaneLink::updateActuatorControls(quint64 time, quint64 flags, float ct
 
             /* Control individual actuators */
             float max_surface_deflection = 30.0f; // Degrees
-            qDebug() << ctl_8;
             sendDataRef("sim/flightmodel/controls/mwing13_ail1def", ctl_8 * max_surface_deflection);
             sendDataRef("sim/flightmodel/controls/mwing14_ail1def", ctl_9 * max_surface_deflection);
             sendDataRef("sim/flightmodel/controls/mwing15_ail1def", ctl_10 * max_surface_deflection);
@@ -670,10 +669,6 @@ void QGCXPlaneLink::readBytes()
 					yacc = p.f[6] * one_g;
 					zacc = -p.f[4] * one_g;
 
-                    // FOR TAILSITTER
-                    //xacc = -p.f[4] * one_g;
-                    //zacc = -p.f[5] * one_g;
-
 					//qDebug() << "X-Plane values" << xacc << yacc << zacc;
 				}
 
@@ -705,10 +700,6 @@ void QGCXPlaneLink::readBytes()
                 pitchspeed = p.f[0];
                 rollspeed = p.f[1];
                 yawspeed = p.f[2];
-
-                // FOR TAILSITTER
-                //rollspeed = p.f[2];
-                //yawspeed = -p.f[1];
 
                 fields_changed |= (1 << 3) | (1 << 4) | (1 << 5);
 
@@ -952,8 +943,9 @@ void QGCXPlaneLink::readBytes()
             // set pressure alt to changed
             fields_changed |= (1 << 11);
 
-            if (/* TAILSITTER */ true)
+            if (_vehicle->vehicleType() == MAV_TYPE_VTOL_RESERVED2)     //< This type we use for our octoscout/octobeast
             {
+                /* Difference is x=z and z=-x to get the 90 deg rotation */
                 emit sensorHilRawImuChanged(QGC::groundTimeUsecs(), zacc, yacc, -xacc, yawspeed, pitchspeed, -rollspeed,
                                             zmag, ymag, -xmag, abs_pressure, diff_pressure / 100.0, pressure_alt, temperature, fields_changed);
             }
