@@ -648,16 +648,16 @@ void QGCXPlaneLink::readBytes()
 				// with v10.3 and earlier) delivers yacc=0 and zacc=0 when the ground speed is very low, which gives e.g. wrong readings 
 				// before launch when waiting on the runway. This might pose a problem for initial state estimation/calibration. 
 				// Instead, we calculate our own accelerations.
-				if (fabsf(groundspeed)<0.1f && alt_agl<1.0) 
+                if (fabsf(groundspeed)<0.1f && alt_agl<0.01)
 				{
 					// TODO: Add centrip. acceleration to the current static acceleration implementation.
-                    Eigen::Vector3f g(0, 0, -9.80665f);
+                    /*Eigen::Vector3f g(0, 0, -9.80665f);
 					Eigen::Matrix3f R = euler_to_wRo(yaw, pitch, roll);
-					Eigen::Vector3f gr = R.transpose().eval() * g;
+                    Eigen::Vector3f gr = R.transpose().eval() * g;*/
 
-					xacc = gr[0];
-					yacc = gr[1];
-					zacc = gr[2];
+                    xacc = 9.80665f;
+                    yacc = 0;
+                    zacc = 0;
 
 					//qDebug() << "Calculated values" << gr[0] << gr[1] << gr[2];
 				}
