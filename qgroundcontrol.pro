@@ -196,7 +196,8 @@ include(QGCExternalLibs.pri)
 
 RESOURCES += \
     qgroundcontrol.qrc \
-    qgcresources.qrc
+    qgcresources.qrc \
+    qautomationsettings.qrc
 
 DebugBuild {
     # Unit Test resources
@@ -245,6 +246,10 @@ INCLUDEPATH += \
 FORMS += \
     src/ui/MainWindow.ui \
     src/QGCQmlWidgetHolder.ui \
+    src/ui/autoHil/QGCAutoHilControl.ui \
+    src/ui/uas/MissionSettings.ui \
+    src/ui/autoHil/QGCHilMissionStatus.ui \
+    src/ui/autoHil/QGCCmdDispatcher.ui
 
 !MobileBuild {
 FORMS += \
@@ -339,7 +344,11 @@ HEADERS += \
     src/AutoPilotPlugins/APM/APMAirframeLoader.h \
     src/QmlControls/QGCImageProvider.h \
     src/QtLocationPlugin/QMLControl/QGCMapEngineManager.h \
-    src/PositionManager/PositionManager.h
+    src/PositionManager/PositionManager.h \
+    src/ui/autoHil/QGCAutoHilControl.h \
+    src/ui/uas/MissionSettings.h \
+    src/ui/autoHil/QGCHilMissionStatus.h \
+    src/ui/autoHil/QGCCmdDispatcher.h
 
 AndroidBuild {
 HEADERS += \
@@ -384,6 +393,7 @@ HEADERS += \
     src/QGCMessageBox.h \
     src/uas/FileManager.h \
     src/ui/HILDockWidget.h \
+    src/ui/autoHil/AutoHILDockWidget.h \
     src/ui/linechart/ChartPlot.h \
     src/ui/linechart/IncrementalPlot.h \
     src/ui/linechart/LinechartPlot.h \
@@ -504,7 +514,11 @@ SOURCES += \
     src/QmlControls/QGCImageProvider.cc \
     src/QtLocationPlugin/QMLControl/QGCMapEngineManager.cc \
     src/PositionManager/SimulatedPosition.cc \
-    src/PositionManager/PositionManager.cpp
+    src/PositionManager/PositionManager.cpp \
+    src/ui/autoHil/QGCAutoHilControl.cpp \
+    src/ui/uas/MissionSettings.cpp \
+    src/ui/autoHil/QGCMissionStatus.cpp \
+    src/ui/autoHil/QGCCmdDispatcher.cpp
 
 DebugBuild {
 SOURCES += \
@@ -541,6 +555,7 @@ SOURCES += \
     src/comm/QGCXPlaneLink.cc \
     src/Joystick/JoystickSDL.cc \
     src/ui/HILDockWidget.cc \
+    src/ui/autoHil/AutoHILDockWidget.cpp \
     src/ui/linechart/ChartPlot.cc \
     src/ui/linechart/IncrementalPlot.cc \
     src/ui/linechart/LinechartPlot.cc \

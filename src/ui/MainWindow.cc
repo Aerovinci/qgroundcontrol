@@ -51,6 +51,7 @@
 #include "CustomCommandWidget.h"
 #include "QGCDockWidget.h"
 #include "HILDockWidget.h"
+#include "autoHil/AutoHILDockWidget.h"
 #include "AppMessages.h"
 #endif
 
@@ -72,7 +73,8 @@ enum DockWidgetTypes {
     ONBOARD_FILES,
     INFO_VIEW,
     HIL_CONFIG,
-    ANALYZE
+    ANALYZE,
+    MISSION_AUTOMATE
 };
 
 static const char *rgDockWidgetNames[] = {
@@ -81,7 +83,8 @@ static const char *rgDockWidgetNames[] = {
     "Onboard Files",
     "Info View",
     "HIL Config",
-    "Analyze"
+    "Analyze",
+    "Mission Automation"
 };
 
 #define ARRAY_SIZE(ARRAY) (sizeof(ARRAY) / sizeof(ARRAY[0]))
@@ -357,6 +360,9 @@ bool MainWindow::_createInnerDockWidget(const QString& widgetName)
                 break;
             case INFO_VIEW:
                 widget= new QGCTabbedInfoView(widgetName, action, this);
+                break;
+            case MISSION_AUTOMATE:
+                widget = new AutoHILDockWidget(widgetName, action, this);
                 break;
         }
         if(action->data().toInt() == INFO_VIEW) {

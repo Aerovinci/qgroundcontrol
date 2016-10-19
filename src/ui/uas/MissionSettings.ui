@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MissionSettings</class>
+ <widget class="QWidget" name="MissionSettings">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>407</width>
+    <height>150</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Mission settings</string>
+  </property>
+  <widget class="QLineEdit" name="txtMissionDir">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>10</y>
+     <width>181</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="chkRepetition">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>40</y>
+     <width>131</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>5 minutes</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>10 minutes</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>1 hour</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>2 hours</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>5 hours</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>10 hours</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>24 hours</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QPushButton" name="btnSaveSettings">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>120</y>
+     <width>121</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </widget>
+  <widget class="Line" name="line">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>100</y>
+     <width>371</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnLoadDir">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>10</y>
+     <width>80</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Select</string>
+   </property>
+  </widget>
+  <widget class="QSplitter" name="splitter">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>12</y>
+     <width>103</width>
+     <height>81</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Vertical</enum>
+   </property>
+   <widget class="QLabel" name="label">
+    <property name="text">
+     <string>Load mission dir:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="text">
+     <string>Repetion every:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_11">
+    <property name="text">
+     <string>X-Plane IP addr:</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QLineEdit" name="txtHost">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>70</y>
+     <width>131</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>127.0.0.1:49005</string>
+   </property>
+  </widget>
+  <zorder>splitter</zorder>
+  <zorder>txtMissionDir</zorder>
+  <zorder>chkRepetition</zorder>
+  <zorder>btnLoadDir</zorder>
+  <zorder>txtHost</zorder>
+  <zorder>btnSaveSettings</zorder>
+  <zorder>line</zorder>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
